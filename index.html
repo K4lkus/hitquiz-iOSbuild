@@ -309,7 +309,7 @@
     function displayCurrentSong() {
         document.getElementById('status').innerText = "Hör genau hin...";
         // Die URL für iOS mit playsinline
-        document.getElementById('video-player').src = `https://www.youtube-nocookie.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
+        document.getElementById('video-player').src = `https://www.youtube.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
     
         document.getElementById('controls').classList.remove('hidden');
         document.getElementById('song-info').classList.add('hidden');
