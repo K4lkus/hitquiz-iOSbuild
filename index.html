@@ -135,7 +135,7 @@
             <p id="db-count"></p>
             <button onclick="resetPointsOnly()" style="background: #444; font-size: 0.7em;">🔄 Punkte auf 0</button>
             <button onclick="backToMenu()" class="btn-dark" style="font-size: 0.8em; background: #00d4ff; color: #000;">📂 Box wechseln</button>
-            <button onclick="resetGame()" style="background: #cc0000; font-size: 0.7em;">❌ Alles Reset</button>
+            <button onclick="hardReset()" style="background: #cc0000; font-size: 0.7em;">❌ Alles Reset</button>
         </div>
     </div>
 
@@ -159,6 +159,7 @@
     let players = [];
     let currentSong = null;
     let playedSongIds = JSON.parse(localStorage.getItem('hitster_played_songs')) || [];
+    let lastRevealedId = null; // Merkt sich die ID des gerade aufgedeckten Songs
 
     function bootQuiz() {
         const catDrop = document.getElementById('category-dropdown');
@@ -243,8 +244,10 @@
         document.getElementById('song-info').classList.remove('hidden');
         document.getElementById('display-title').innerText = `${currentSong.titel} - ${currentSong.interpret}`;
         document.getElementById('display-year').innerText = `Jahr: ${currentSong.jahr}`;
+    
         if(!playedSongIds.includes(currentSong.ytId)) {
             playedSongIds.push(currentSong.ytId);
+            lastRevealedId = currentSong.ytId; // <--- HIER: ID für eventuelle Korrektur merken
             localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
             updateDbCounter();
         }
@@ -263,8 +266,20 @@
     }
 
     function updateScore(idx, change) {
+        // Wenn ein Punkt abgezogen wird UND wir eine ID zum Zurückholen haben
+        if (change === -1 && lastRevealedId) {
+            // Entferne die ID wieder aus der Liste der gespielten Lieder
+            playedSongIds = playedSongIds.filter(id => id !== lastRevealedId);
+            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+        
+            lastRevealedId = null; // Verhindern, dass man durch mehrfaches Drücken andere Lieder löscht
+            updateDbCounter(); // Anzeige aktualisieren (Pool wird wieder größer)
+            alert("Lied wurde zurück in den Pool gelegt!");
+        }
+
         players[idx].score = Math.max(0, players[idx].score + change);
         renderScoreboard();
+    
         if(players[idx].score === 10) {
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             document.getElementById('status').innerText = `🎉 ${players[idx].name} gewinnt! 🎉`;
@@ -306,9 +321,15 @@
     }
 
     function hardReset() {
-        if(confirm("ACHTUNG: Das löscht ALLES. Auch die Liste der gespielten Lieder. Sicher?")) {
-            localStorage.clear();
-            location.reload();
+        console.log("Hard Reset wurde ausgelöst"); // Nur für den Debugger
+        if(confirm("⚠️ ACHTUNG: Das löscht ALLES. Wirklich fortfahren?")) {
+            try {
+                window.localStorage.clear();
+                window.location.href = window.location.pathname + "?reset=" + Date.now();
+            } catch (e) {
+                // Falls localStorage blockiert ist, erzwingen wir ein Neuladen
+                window.location.reload(true);
+            }
         }
     }
 
