@@ -134,6 +134,7 @@
         <div style="margin-top: 20px; font-size: 0.8em; padding-bottom: 20px;">
             <p id="db-count"></p>
             <button onclick="resetPointsOnly()" style="background: #444; font-size: 0.7em;">🔄 Punkte auf 0</button>
+            <button onclick="backToMenu()" class="btn-dark" style="font-size: 0.8em; background: #00d4ff; color: #000;">📂 Box wechseln</button>
             <button onclick="resetGame()" style="background: #cc0000; font-size: 0.7em;">❌ Alles Reset</button>
         </div>
     </div>
@@ -279,17 +280,29 @@
     }
 
     function backToMenu() {
-        // Wir gehen zurück zum Setup, aber löschen die 'players' Variable NICHT.
-        document.getElementById('game-area').classList.add('hidden');
-        document.getElementById('setup-area').classList.remove('hidden');
+        if(confirm("Box wechseln? Die aktuellen Punkte bleiben erhalten!")) {
+            // 1. Spielbereich verstecken, Setup anzeigen
+            document.getElementById('game-area').classList.add('hidden');
+            document.getElementById('setup-area').classList.remove('hidden');
         
-        // Verstecke die Namenseingabe, da die Spieler schon feststehen, 
-        // zeige aber den Start-Button direkt an
-        document.getElementById('player-selection').classList.add('hidden');
-        document.getElementById('name-inputs').innerHTML = "<p style='color:#bcff00;'>Spieler und Punkte sind gespeichert!</p>";
-        document.getElementById('start-game-btn').classList.remove('hidden');
+            // 2. Musik stoppen
+            stopVideo();
+
+            // 3. Setup-Bereich modifizieren:
+            // Wir verstecken die Buttons "2 Spieler", "3 Spieler" etc.
+            document.getElementById('player-selection').classList.add('hidden');
         
-        stopVideo();
+            // Wir zeigen eine Nachricht an, dass die Punkte sicher sind
+            document.getElementById('name-inputs').innerHTML = `
+                <div style="background: rgba(29, 185, 84, 0.2); border: 1px solid #1DB954; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                    <p style="color:#bcff00; font-weight:bold; margin:0;">✅ Spieler & Punkte sind gesichert!</p>
+                    <p style="font-size: 0.8em; margin: 5px 0 0 0;">Wähle oben eine neue Box und klicke auf Start.</p>
+                </div>
+            `;
+        
+            // Den Start-Button wieder einblenden
+            document.getElementById('start-game-btn').classList.remove('hidden');
+        }
     }
 
     function hardReset() {
