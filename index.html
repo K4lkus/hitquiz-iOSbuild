@@ -152,21 +152,26 @@
     </div>
 
     <div id="tutorial-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-        <div class="card animate-slide" style="max-width: 85%; max-height: 80%; overflow-y: auto; border-color: #bcff00;">
+        <div class="card animate-slide" style="max-width: 85%; max-height: 80%; overflow-y: auto; border-color: #bcff00; border-width: 2px;">
             <h2 style="color: #bcff00;">📖 So wird gespielt</h2>
-            <ul style="text-align: left; line-height: 1.6; font-size: 0.9em;">
-                <li>Wähle eine <b>Box</b> und die <b>Spieleranzahl</b> aus.</li>
-                <li✨ Start-Karte: Gebt jedem Spieler vorab einen Song aus der Box als "Start-Lied" (ohne Raten), damit jeder eine erste Jahreszahl in seiner Timeline hat.</li>
-                <li>Klicke auf <b>Nächster Song</b> – das Lied lädt im "Loch".</li>
-                <li>Auf dem iPad: Drücke kurz <b>Play</b> (Apple blockiert Autoplay).</li>
-                <li>Wer das Jahr errät, bekommt <b>+1 Punkt</b>.</li>
-                <li>Der Song erscheint dann in deiner <b>Timeline</b>.</li>
-                <li>Mit <b>Lösung zeigen</b> beendest du die Runde.</li>
-                <li style="margin-top: 10px; color: #ffd700; border-top: 1px solid #444; padding-top: 10px;">
-                    💡 <b>Pro-Tipp:</b> Um YouTube-Werbung zu vermeiden, empfehlen wir <b>YouTube Premium</b>, einen <b>Adblocker</b> (z.B. AdGuard für Safari) oder den <b>Brave Browser</b>.
+            <ul style="text-align: left; line-height: 1.6; font-size: 0.9em; list-style-type: none; padding-left: 0;">
+                <li style="margin-bottom: 8px;">1️⃣ Wähle eine <b>Box</b> und die <b>Spieleranzahl</b> aus.</li>
+            
+                <li style="margin-bottom: 8px; color: #00d4ff; border: 1px dashed #00d4ff; padding: 8px; border-radius: 8px;">
+                    ✨ <b>Die Start-Karte:</b> Bevor es losgeht, bekommt jeder Spieler einen Song als "Start-Anker". Deckt dazu einen Song auf und weist ihn mit <b>+1</b> einem Spieler zu, ohne dass dieser raten muss.
+                </li>
+
+                <li style="margin-bottom: 8px;">2️⃣ Klicke auf <b>Nächster Song</b> – das Lied lädt im "Loch".</li>
+                <li style="margin-bottom: 8px;">3️⃣ Auf dem iPad: Drücke kurz <b>Play</b> (Apple blockiert Autoplay).</li>
+                <li style="margin-bottom: 8px;">4️⃣ Wer das Jahr richtig einordnet, bekommt <b>+1 Punkt</b>.</li>
+                <li style="margin-bottom: 8px;">5️⃣ Der Song erscheint dann in deiner <b>Timeline</b>.</li>
+                <li style="margin-bottom: 8px;">6️⃣ Mit <b>Lösung zeigen</b> beendest du die Runde.</li>
+            
+                <li style="margin-top: 15px; color: #ffd700; border-top: 1px solid #444; padding-top: 10px; font-size: 0.85em;">
+                    💡 <b>Pro-Tipp:</b> Nutzt <b>YouTube Premium</b> (im Browser einloggen!), einen Adblocker oder den <b>Brave Browser</b>, um Werbung zu unterdrücken.
                 </li>
             </ul>
-            <button onclick="toggleTutorial()" class="btn-secondary" style="width: 100%;">Alles klar!</button>
+            <button onclick="toggleTutorial()" class="btn-secondary" style="width: 100%; margin-top: 10px;">Alles klar, los geht's!</button>
         </div>
     </div>
 
