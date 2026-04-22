@@ -198,30 +198,55 @@
         const url = document.getElementById('box-dropdown').value;
         try {
             const response = await fetch(url);
+            if (!response.ok) throw new Error("Netzwerk-Fehler");
+        
             const data = await response.text();
+            // Teilt die CSV in Zeilen und entfernt die Kopfzeile
             const rows = data.split(/\r?\n/).slice(1);
-            
-            // Neue Songdaten laden
+        
+            // Datenbank mit Songs aus der gewählten Box füllen
             songDatenbank = rows.map(row => {
                 const col = row.split(row.includes(';') ? ';' : ',');
-                return { ytId: col[0]?.trim(), titel: col[1]?.trim(), interpret: col[2]?.trim(), jahr: col[3]?.trim() };
+                return { 
+                    ytId: col[0]?.trim(), 
+                    titel: col[1]?.trim(), 
+                    interpret: col[2]?.trim(), 
+                    jahr: col[3]?.trim() 
+                };
             }).filter(s => s.ytId);
 
-            // LOGIK-ÄNDERUNG: Nur Spieler erstellen, wenn noch keine da sind (Punkte-Erhalt)
+            // SPIELER-LOGIK:
+            // Falls wir noch keine Spieler haben (Erster Start), legen wir sie neu an.
+            // Falls wir schon welche haben (Box-Wechsel), überspringen wir das, damit Punkte bleiben.
             if (players.length === 0) {
                 const inps = document.querySelectorAll('#name-inputs input');
-                players = Array.from(inps).map(inp => ({ name: inp.value || "Spieler", score: 0 }));
+                players = Array.from(inps).map(inp => ({ 
+                    name: inp.value || "Spieler", 
+                    score: 0,
+                    wonSongs: [] // Hier werden die Titel später gespeichert
+                }));
+            } else {
+                // Falls Spieler existieren, stellen wir sicher, dass 'wonSongs' definiert ist
+                players.forEach(p => {
+                    if (!p.wonSongs) p.wonSongs = [];
+                });
             }
-            
+        
+            // UI Umschalten
             document.getElementById('setup-area').classList.add('hidden');
             document.getElementById('game-area').classList.remove('hidden');
+        
+            // Anzeige aktualisieren
             updateDbCounter();
             renderScoreboard();
+        
+            console.log("Spiel gestartet mit " + songDatenbank.length + " Songs.");
         } catch(e) {
-            alert("Fehler beim Laden der neuen Box!");
+            console.error(e);
+            alert("Fehler beim Laden der Google-Tabelle. Prüfe die URL oder deine Internetverbindung.");
         }
     }
-
+    
     function updateDbCounter() {
         const pool = songDatenbank.filter(s => !playedSongIds.includes(s.ytId));
         document.getElementById('db-count').innerHTML = `Pool: ${pool.length} | Gespielt: ${playedSongIds.length}`;
@@ -259,6 +284,9 @@
             <div class="player-score">
                 <strong>${p.name}</strong>
                 <span class="score-val">${p.score}</span>
+                <div style="font-size: 0.65em; color: #aaa; text-align: left; max-height: 100px; overflow-y: auto; margin-bottom: 10px;">
+                    ${p.wonSongs ? p.wonSongs.map(s => `<div>• ${s}</div>`).join('') : ''}
+                </div>
                 <button class="btn-plus" onclick="updateScore(${i}, 1)">+1</button>
                 <button class="btn-minus" onclick="updateScore(${i}, -1)">-1</button>
             </div>
@@ -266,25 +294,36 @@
     }
 
     function updateScore(idx, change) {
-        // Wenn ein Punkt abgezogen wird UND wir eine ID zum Zurückholen haben
-        if (change === -1 && lastRevealedId) {
-            // Entferne die ID wieder aus der Liste der gespielten Lieder
-            playedSongIds = playedSongIds.filter(id => id !== lastRevealedId);
-            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+        if (change === 1 && currentSong) {
+            // Song zur Liste des Spielers hinzufügen
+            if (!players[idx].wonSongs) players[idx].wonSongs = [];
+            players[idx].wonSongs.push(`${currentSong.jahr}: ${currentSong.titel}`);
+            players[idx].score += 1;
         
-            lastRevealedId = null; // Verhindern, dass man durch mehrfaches Drücken andere Lieder löscht
-            updateDbCounter(); // Anzeige aktualisieren (Pool wird wieder größer)
-            alert("Lied wurde zurück in den Pool gelegt!");
-        }
-
-        players[idx].score = Math.max(0, players[idx].score + change);
-        renderScoreboard();
-    
-        if(players[idx].score === 10) {
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            document.getElementById('status').innerText = `🎉 ${players[idx].name} gewinnt! 🎉`;
+            // Letzte ID für Korrektur merken
+            lastRevealedId = currentSong.ytId;
+        } else if (change === -1) {
+            // Bei -1 den letzten Song aus der Liste wieder entfernen
+            if (players[idx].wonSongs && players[idx].wonSongs.length > 0) {
+                players[idx].wonSongs.pop();
+            }
+            players[idx].score = Math.max(0, players[idx].score - 1);
+        
+            // Lied zurück in Pool (wie besprochen)
+            if (lastRevealedId) {
+                playedSongIds = playedSongIds.filter(id => id !== lastRevealedId);
+            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+            lastRevealedId = null;
+            updateDbCounter();
         }
     }
+
+    renderScoreboard();
+    if(players[idx].score === 10) {
+        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        document.getElementById('status').innerText = `🎉 ${players[idx].name} gewinnt! 🎉`;
+    }
+}
 
     function resetPointsOnly() {
         if(confirm("Punkte für alle Spieler auf 0 setzen?")) {
