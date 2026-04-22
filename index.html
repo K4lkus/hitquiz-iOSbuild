@@ -124,6 +124,9 @@
 
         <div class="card animate-slide">
             <h2 id="status">Bereit?</h2>
+            
+            <button id="undo-btn" onclick="undoLastSong()" class="hidden" style="font-size: 0.75em; background: #555; margin-bottom: 10px; width: 60%; border-radius: 10px;">↩️ Ups, einen Song zurück</button>
+            
             <div id="video-wrapper">
                 <iframe id="video-player" src="" frameborder="0" allow="autoplay; encrypted-media; playsinline"></iframe>
             </div>
@@ -185,6 +188,7 @@
     let currentSong = null;
     let lastRevealedId = null;
     let playedSongIds = JSON.parse(localStorage.getItem('hitster_played_songs')) || [];
+    let lastSong = null;
 
     window.onload = function() {
         const catDrop = document.getElementById('category-dropdown');
@@ -286,14 +290,49 @@
     function pickRandomSong() {
         let pool = songDatenbank.filter(s => !playedSongIds.includes(s.ytId));
         if (pool.length === 0) return alert("Box leer!");
-        
+    
+        // 1. Merke dir den aktuellen Song, bevor ein neuer gewählt wird
+        if (currentSong) {
+            lastSong = currentSong;
+            document.getElementById('undo-btn').classList.remove('hidden');
+        }
+
+        // 2. Neuen Song wählen
         currentSong = pool[Math.floor(Math.random() * pool.length)];
         lastRevealedId = null;
-        
+    
+        // 3. UI aktualisieren & Video laden
+        displayCurrentSong();
+    }
+
+    // Hilfsfunktion, um den Song anzuzeigen und das Video zu laden
+    function displayCurrentSong() {
         document.getElementById('status').innerText = "Hör genau hin...";
-        document.getElementById('video-player').src = `https://www.youtube.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1`;
+        // Die URL für iOS mit playsinline
+        document.getElementById('video-player').src = `https://www.youtube-nocookie.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
+    
         document.getElementById('controls').classList.remove('hidden');
         document.getElementById('song-info').classList.add('hidden');
+    }
+
+    function undoLastSong() {
+        if (lastSong) {
+            // 1. Den letzten Song zurückholen
+            currentSong = lastSong;
+            lastSong = null; // Nur einmaliges Zurückgehen erlauben
+        
+            // 2. Den Song aus der Sperrliste entfernen, falls er dort schon gelandet ist
+            playedSongIds = playedSongIds.filter(id => id !== currentSong.ytId);
+            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+        
+            // 3. UI & Counter aktualisieren
+            displayCurrentSong();
+            updateDbCounter();
+        
+            // 4. Button wieder verstecken
+            document.getElementById('undo-btn').classList.add('hidden');
+            alert("Vorheriger Song wiederhergestellt!");
+        }
     }
 
     function stopVideo() { document.getElementById('video-player').src = ""; }
