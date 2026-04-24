@@ -19,7 +19,7 @@
             overflow-x: hidden;
         }
 
-        /* Animationen vom Android-Build */
+        /* Animationen */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideInUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes pulse-gold { 
@@ -32,12 +32,13 @@
         .winner-glow { border: 2px solid #ffd700 !important; animation: pulse-gold 1.5s infinite alternate !important; }
         .winner-text { color: #ffd700 !important; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
 
-        /* iOS Video-Loch (Zentriert & Rund) */
+        /* iOS Video-Loch & Tuch */
         #video-wrapper {
             width: 120px; height: 120px; margin: 15px auto;
             border-radius: 50%; border: 4px solid #00d4ff;
             overflow: hidden; position: relative; background: #000;
             box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+            cursor: pointer;
         }
 
         #video-player {
@@ -46,7 +47,19 @@
             width: 100%; height: 100%;
         }
 
-        /* Header & Scoreboard Layout */
+        #video-cover {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d0221;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 20;
+        }
+
+        #video-cover::after {
+            content: '🎵';
+            font-size: 50px;
+        }
+
+        /* Restliches Styling */
         #sticky-header {
             position: sticky; top: 0; z-index: 100;
             background: rgba(13, 2, 33, 0.95); backdrop-filter: blur(10px);
@@ -54,7 +67,6 @@
         }
 
         .scoreboard { display: flex; overflow-x: auto; justify-content: center; gap: 10px; padding: 8px; }
-
         .player-score { 
             background: rgba(20, 20, 35, 0.9); padding: 10px; 
             border-radius: 15px; min-width: 140px; 
@@ -62,8 +74,6 @@
         }
 
         .score-val { font-size: 1.8em; color: #bcff00; font-family: monospace; display: block; margin: 2px 0; }
-
-        /* Timeline / Gewonnene Songs */
         .timeline { 
             display: flex; flex-direction: column; gap: 4px; margin-top: 8px; 
             max-height: 80px; overflow-y: auto; font-size: 0.65em;
@@ -75,7 +85,6 @@
             border-left: 3px solid #ff0055; text-align: left; color: #00d4ff;
         }
 
-        /* Buttons & Cards */
         .card { 
             background: rgba(25, 25, 40, 0.8); border-radius: 20px; 
             padding: 20px; margin: 10px auto; max-width: 90%; 
@@ -88,16 +97,13 @@
             transition: 0.2s; box-shadow: 0 4px 10px rgba(255, 0, 85, 0.3);
         }
 
-        .btn-plus { background: #1DB954 !important; box-shadow: 0 4px 10px rgba(29, 185, 84, 0.3); }
+        .btn-plus { background: #1DB954 !important; }
         .btn-minus { background: #444 !important; font-size: 0.8em; }
         .btn-secondary { background: #00d4ff; color: #000; }
         .btn-danger { background: #cc0000; opacity: 0.7; font-size: 0.8em; }
 
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         select, input { background: #1a1a2e; border: 1px solid #333; color: #00d4ff; padding: 10px; border-radius: 12px; width: 80%; margin-bottom: 10px; }
-
-        .timeline::-webkit-scrollbar { width: 3px; }
-        .timeline::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -127,9 +133,11 @@
             
             <button id="undo-btn" onclick="undoLastSong()" class="hidden" style="font-size: 0.75em; background: #555; margin-bottom: 10px; width: 60%; border-radius: 10px;">↩️ Ups, einen Song zurück</button>
             
-            <div id="video-wrapper">
+            <div id="video-wrapper" onclick="handleCoverClick()">
+                <div id="video-cover"></div>
                 <iframe id="video-player" src="" frameborder="0" allow="autoplay; encrypted-media; playsinline"></iframe>
             </div>
+
             <button onclick="pickRandomSong()" style="width: 80%; font-size: 1.1em; background: #1DB954;">🎲 NÄCHSTER SONG</button>
             
             <div id="controls" class="hidden animate-fade">
@@ -151,32 +159,30 @@
         </div>
     </div>
 
-    <div id="tutorial-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+    <div id="tutorial-modal" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center;">
         <div class="card animate-slide" style="max-width: 85%; max-height: 80%; overflow-y: auto; border-color: #bcff00; border-width: 2px;">
-            <h2 style="color: #bcff00;">📖 So wird gespielt</h2>
-            <ul style="text-align: left; line-height: 1.6; font-size: 0.9em; list-style-type: none; padding-left: 0;">
-                <li style="margin-bottom: 10px;">1️⃣ Wähle eine <b>Box</b> und die <b>Spieleranzahl</b> aus.</li>
+            <h2 style="color: #bcff00; margin-top: 0;">📖 Kurzanleitung</h2>
+            <ul style="text-align: left; list-style: none; padding: 0; line-height: 1.7;">
+                <li style="margin-bottom: 12px;">1️⃣ Wähle eine <b>Box</b> und die <b>Spieleranzahl</b> aus.</li>
     
-                <li style="margin-bottom: 10px;">2️⃣ <b>Start-Karte:</b> Deckt für jeden Spieler vorab einen Song auf (Lösung direkt zeigen) und weist ihn mit <b>+1</b> zu, damit jeder einen Startpunkt hat.</li>
-
-                <li style="margin-bottom: 10px;">3️⃣ Klicke auf <b>Nächster Song</b> – das Lied lädt im "Loch".</li>
+                <li style="margin-bottom: 12px;">2️⃣ <b>Start-Karte:</b> Deckt für jeden vorab einen Song auf (Lösung direkt zeigen) und weist ihn mit <b>+1</b> zu.</li>
     
-                <li style="margin-bottom: 10px;">4️⃣ Auf dem iPad: Drücke kurz <b>Play</b> (Apple blockiert Autoplay).</li>
+                <li style="margin-bottom: 12px;">3️⃣ Klicke auf <b>Nächster Song</b> – das Lied wird geladen.</li>
     
-                <li style="margin-bottom: 10px;">5️⃣ Wer das Jahr richtig einordnet, bekommt <b>+1 Punkt</b>.</li>
+                <li style="margin-bottom: 12px;">4️⃣ Drücke kurz auf die <b>Note</b> - das Lied wird abgespielt.</li>
     
-                <li style="margin-bottom: 10px;">6️⃣ Der Song erscheint dann in deiner <b>Timeline</b>.</li>
+                <li style="margin-bottom: 12px;">5️⃣ Wer das Jahr richtig einordnet, bekommt <b>+1 Punkt</b>.</li>
     
-                <li style="margin-bottom: 10px;">7️⃣ Mit <b>Lösung zeigen</b> beendest du die Runde.</li>
+                <li style="margin-bottom: 12px;">6️⃣ Der Song erscheint automatisch in deiner <b>Timeline</b>.</li>
+    
+                <li style="margin-bottom: 12px;">7️⃣ Mit <b>Lösung zeigen</b> beendest du die aktuelle Runde.</li>
 
                 <li style="margin-bottom: 12px;">8️⃣ <b>Ziel:</b> Wer zuerst <b>10 Punkte</b> gesammelt hat, gewinnt das Spiel! 🏆</li>
     
-                <li style="margin-top: 15px; color: #ffd700; border-top: 1px solid #444; padding-top: 10px; font-size: 0.85em;">
-                    💡 <b>Pro-Tipp:</b> Nutzt <b>YouTube Premium</b> (im Browser einloggen!), einen Adblocker oder den <b>Brave Browser</b>, um Werbung zu unterdrücken.
+                <li style="margin-top: 15px; color: #ffd700; border-top: 1px solid #333; padding-top: 10px; font-size: 0.85em;">
+                    💡 <b>Tipp:</b> Nutze Adblocker oder YT Premium, um Werbung zu vermeiden.
                 </li>
-            </ul>
-            
-            <button onclick="toggleTutorial()" class="btn-secondary" style="width: 100%; margin-top: 10px;">Alles klar, los geht's!</button>
+            <button onclick="toggleTutorial()" class="btn-secondary" style="width: 100%; margin-top: 10px;">Alles klar!</button>
         </div>
     </div>
 
@@ -197,7 +203,6 @@
     let songDatenbank = [];
     let players = [];
     let currentSong = null;
-    let lastRevealedId = null;
     let playedSongIds = JSON.parse(localStorage.getItem('hitster_played_songs')) || [];
     let lastSong = null;
 
@@ -208,6 +213,9 @@
             opt.value = kat; opt.textContent = kat; catDrop.appendChild(opt);
         }
         updateBoxDropdown();
+
+        // Zeigt das Tutorial beim Start automatisch an
+        toggleTutorial(); 
     };
 
     function updateBoxDropdown() {
@@ -249,7 +257,7 @@
             document.getElementById('game-area').classList.remove('hidden');
             updateDbCounter();
             renderScoreboard();
-        } catch(e) { alert("Fehler!"); }
+        } catch(e) { alert("Fehler beim Laden der Songs!"); }
     }
 
     function renderScoreboard() {
@@ -274,8 +282,6 @@
         if (!currentSong) return;
         players[idx].timeline.push({ titel: currentSong.titel, jahr: currentSong.jahr });
         players[idx].score = players[idx].timeline.length;
-        lastRevealedId = currentSong.ytId;
-        
         if (players[idx].score >= 10) {
             players[idx].wins = (players[idx].wins || 0) + 1;
             confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
@@ -287,69 +293,67 @@
         if (players[idx].timeline.length > 0) {
             players[idx].timeline.pop();
             players[idx].score = players[idx].timeline.length;
-            
-            if (lastRevealedId) {
-                playedSongIds = playedSongIds.filter(id => id !== lastRevealedId);
-                localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
-                lastRevealedId = null;
-                updateDbCounter();
-            }
         }
         renderScoreboard();
     }
 
     function pickRandomSong() {
+        // 1. POOL FILTERN
+        // Es werden nur Songs gewählt, die in dieser Sitzung noch nicht dran waren.
         let pool = songDatenbank.filter(s => !playedSongIds.includes(s.ytId));
         if (pool.length === 0) return alert("Box leer!");
-    
-        // 1. Merke dir den aktuellen Song, bevor ein neuer gewählt wird
+
+        // 2. SONG-HISTORY (UNDO-FUNKTION)
+        // Bevor der neue Song kommt, merken wir uns den aktuellen als "lastSong".
         if (currentSong) {
             lastSong = currentSong;
             document.getElementById('undo-btn').classList.remove('hidden');
         }
 
-        // 2. Neuen Song wählen
+        // 3. ZUFALLSWAHL
+        // Ein neuer Song wird aus dem Pool gezogen.
         currentSong = pool[Math.floor(Math.random() * pool.length)];
-        lastRevealedId = null;
-    
-        // 3. UI aktualisieren & Video laden
-        displayCurrentSong();
-    }
 
-    // Hilfsfunktion, um den Song anzuzeigen und das Video zu laden
-    function displayCurrentSong() {
-        document.getElementById('status').innerText = "Hör genau hin...";
-        // Die URL für iOS mit playsinline
-        document.getElementById('video-player').src = `https://www.youtube.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0`;
-    
+        // 4. UI RESET (DAS TUCH)
+        // Ganz wichtig: Hier stellen wir sicher, dass das Tuch blickdicht oben liegt,
+        // bevor das Video geladen wird. So wird kein Vorschaubild ("Schummeln") gesehen.
+        const cover = document.getElementById('video-cover');
+        cover.style.display = "flex";
+        cover.style.opacity = "1";
+        document.getElementById('status').innerText = "Bereit? Tippe auf die Note!";
+
+        // 5. PLAYER LADEN (iOS OPTIMIERT)
+        // Die URL wird in das Iframe geladen. 
+        // "enablejsapi=1" erlaubt uns, den Ton später per Klick zu starten.
+        // "autoplay=1" versucht zu starten, "playsinline=1" verhindert den Vollbildmodus.
+        document.getElementById('video-player').src = 
+            `https://www.youtube.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0&enablejsapi=1`;
+
+        // Controls einblenden, Song-Info (Lösung) verstecken
         document.getElementById('controls').classList.remove('hidden');
         document.getElementById('song-info').classList.add('hidden');
     }
 
-    function undoLastSong() {
-        if (lastSong) {
-            // 1. Den letzten Song zurückholen
-            currentSong = lastSong;
-            lastSong = null; // Nur einmaliges Zurückgehen erlauben
-        
-            // 2. Den Song aus der Sperrliste entfernen, falls er dort schon gelandet ist
-            playedSongIds = playedSongIds.filter(id => id !== currentSong.ytId);
-            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
-        
-            // 3. UI & Counter aktualisieren
-            displayCurrentSong();
-            updateDbCounter();
-        
-            // 4. Button wieder verstecken
-            document.getElementById('undo-btn').classList.add('hidden');
-            alert("Vorheriger Song wiederhergestellt!");
-        }
+    function handleCoverClick() {
+        // Das Tuch bleibt SICHTBAR (wir löschen die Zeilen, die es verstecken)
+    
+        document.getElementById('status').innerText = "Musik läuft...";
+
+        // Der wichtigste Teil für iOS: Der Klick triggert den Sound
+        const player = document.getElementById('video-player');
+        player.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+
+        // Optisches Feedback: Die Note kurz vergrößern, damit man merkt, dass gedrückt wurde
+        const cover = document.getElementById('video-cover');
+        cover.style.transform = "scale(1.1)";
+        setTimeout(() => { cover.style.transform = "scale(1)"; }, 200);
     }
 
     function stopVideo() { document.getElementById('video-player').src = ""; }
 
     function revealInfo() {
         stopVideo();
+        document.getElementById('video-cover').style.display = "none";
         document.getElementById('song-info').classList.remove('hidden');
         document.getElementById('display-title').innerText = currentSong.titel + " - " + currentSong.interpret;
         document.getElementById('display-year').innerText = "Jahr: " + currentSong.jahr;
@@ -357,6 +361,23 @@
         if (!playedSongIds.includes(currentSong.ytId)) {
             playedSongIds.push(currentSong.ytId);
             localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+            updateDbCounter();
+        }
+    }
+
+    function undoLastSong() {
+        if (lastSong) {
+            currentSong = lastSong;
+            lastSong = null;
+            playedSongIds = playedSongIds.filter(id => id !== currentSong.ytId);
+            localStorage.setItem('hitster_played_songs', JSON.stringify(playedSongIds));
+            
+            const cover = document.getElementById('video-cover');
+            cover.style.display = "flex";
+            cover.style.opacity = "1";
+            document.getElementById('video-player').src = `https://www.youtube.com/embed/${currentSong.ytId}?autoplay=1&playsinline=1&modestbranding=1&rel=0&enablejsapi=1`;
+            
+            document.getElementById('undo-btn').classList.add('hidden');
             updateDbCounter();
         }
     }
@@ -388,7 +409,7 @@
 
     function toggleTutorial() {
         const modal = document.getElementById('tutorial-modal');
-        if (modal.classList.contains('hidden')) {
+        if (modal.style.display === 'none' || modal.classList.contains('hidden')) {
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
         } else {
